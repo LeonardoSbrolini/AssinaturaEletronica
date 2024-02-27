@@ -7,36 +7,72 @@ const Assinatura = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
 
-    const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+    const startDrawing = (x: number, y: number) => {
         if (!canvasRef.current) return;
-        setDesenhando(true);
         const ctx = canvasRef.current.getContext('2d');
         if (ctx) {
             ctxRef.current = ctx;
             ctx.beginPath();
-            const rect = canvasRef.current.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
             ctx.moveTo(x, y);
         }
     };
 
-    const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+    const continueDrawing = (x: number, y: number) => {
         if (!canvasRef.current || !ctxRef.current || !desenhando) return;
         const ctx = ctxRef.current;
-        const rect = canvasRef.current.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
         ctx.lineTo(x, y);
         ctx.stroke();
     };
 
-    const handleCanvasMouseUp = () => {
+    const endDrawing = () => {
         setDesenhando(false);
         if (canvasRef.current && ctxRef.current) {
             const dataUrl = canvasRef.current.toDataURL();
             setAssinatura(dataUrl);
         }
+    };
+
+    const handleCanvasMouseDown = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+        e.preventDefault();
+        setDesenhando(true);
+        const rect = canvasRef.current?.getBoundingClientRect();
+        const x = e.clientX - (rect?.left || 0);
+        const y = e.clientY - (rect?.top || 0);
+        startDrawing(x, y);
+    };
+
+    const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+        e.preventDefault();
+        const rect = canvasRef.current?.getBoundingClientRect();
+        const x = e.clientX - (rect?.left || 0);
+        const y = e.clientY - (rect?.top || 0);
+        continueDrawing(x, y);
+    };
+
+    const handleCanvasMouseUp = (e: React.MouseEvent<HTMLCanvasElement, MouseEvent>) => {
+        e.preventDefault();
+        endDrawing();
+    };
+
+    const handleCanvasTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+        e.preventDefault();
+        const rect = canvasRef.current?.getBoundingClientRect();
+        const x = e.touches[0].clientX - (rect?.left || 0);
+        const y = e.touches[0].clientY - (rect?.top || 0);
+        startDrawing(x, y);
+    };
+
+    const handleCanvasTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+        e.preventDefault();
+        const rect = canvasRef.current?.getBoundingClientRect();
+        const x = e.touches[0].clientX - (rect?.left || 0);
+        const y = e.touches[0].clientY - (rect?.top || 0);
+        continueDrawing(x, y);
+    };
+
+    const handleCanvasTouchEnd = (e: React.TouchEvent<HTMLCanvasElement>) => {
+        e.preventDefault();
+        endDrawing();
     };
 
     const handleLimparAssinatura = () => {
@@ -59,6 +95,9 @@ const Assinatura = () => {
                         onMouseDown={handleCanvasMouseDown}
                         onMouseMove={handleCanvasMouseMove}
                         onMouseUp={handleCanvasMouseUp}
+                        onTouchStart={handleCanvasTouchStart}
+                        onTouchMove={handleCanvasTouchMove}
+                        onTouchEnd={handleCanvasTouchEnd}
                     />
                 </div>
                 <div className="flex mt-2">
